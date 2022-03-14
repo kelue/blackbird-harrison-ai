@@ -12,25 +12,72 @@ import logo from '../../assets/logo.svg';
 
 export default function LoginForm() {
   const [showAlert, setShowAlert] = useState(false);
+  const [emailError, setEmailError] = useState(false); 
+  const [passError, setPassError] = useState(false);
+  const [errorMessagePass, setErrorMessagePass] = useState('');
+  const [errorMessageMail, setErrorMessageMail] = useState('');
+
   const validateForm = (event) => {
     event.preventDefault()
     const data = new FormData(event.currentTarget);
     const email = data.get('email');
     const password = data.get('password');
 
-    // Add validation code here
+    const validator = require('email-validator');
+    const validEmail = validator.validate(email); //returns true if email is valid
 
+    if (!validEmail){
+      setErrorMessageMail("Enter a valid Email Address")
+      setEmailError(true)
+    }
+
+    const uppercase   = /(?=.*?[A-Z])/.test(password);
+    const lowercase   = /(?=.*?[a-z])/.test(password);
+    const digits      = /(?=.*?[0-9])/.test(password);
+    const specialChar = /(?=.*?[#?!@$%^&*-])/.test(password);
+    const minLength   = /.{8}/.test(password);
+
+
+    if(password === ""){
+      setPassError(true)
+      setErrorMessagePass("Password contain a minimum of 8 characters, 1 lowercase letter, 1 uppercase letter, 1 digit & 1 special Character")
+    }else if (!uppercase){
+      setPassError(true)
+      setErrorMessagePass("Password should contain at least 1 uppercase letter")
+    }else if(!lowercase){
+      setPassError(true)
+      setErrorMessagePass("Password should contain at least 1 uppercase letter")
+    }else if(!digits){
+      setPassError(true)
+      setErrorMessagePass("Password should contain at least 1 digit")
+    }else if(!specialChar){
+      setPassError(true)
+      setErrorMessagePass("Password should contain at least 1 Special Character")
+    }else if(!minLength){
+      setPassError(true)
+      setErrorMessagePass("Password must be a minimum of 8 characters")
+    }
   }
 
   const handleSubmit = (event) => {
     event.preventDefault();
+
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    const email = data.get('email');
+    const password = data.get('password');
+    
+    // The next few lines resets all the state values from the previous submission
+    setEmailError(false)
+    setPassError(false)
+    setErrorMessagePass('')
+    setErrorMessageMail('')
+
+    // calls the validation logic to validate email & password input
     validateForm(event);
-    setShowAlert("Login Successful");
+
+    if (email !=="" && password !=="" && emailError === false && passError === false ){
+      setShowAlert("Login Successful");
+    }
   };
 
   return (
@@ -87,6 +134,9 @@ export default function LoginForm() {
               name="email"
               autoComplete="email"
               autoFocus
+              error={emailError}
+              helperText={errorMessageMail}
+              data-testid="emailfield"
             />
             <TextField
               margin="normal"
@@ -97,11 +147,15 @@ export default function LoginForm() {
               type="password"
               id="password"
               autoComplete="current-password"
+              error={passError}
+              helperText={errorMessagePass}
+              data-testid="passfield"
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
+              data-testid='button'
               sx={{ mt: 3, mb: 2 }}
             >
               Sign In
